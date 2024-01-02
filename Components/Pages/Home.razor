@@ -1,0 +1,21 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>CastMatch | Connect your favorite Movies/Show cast!</PageTitle>
+
+<Card />
+<button class="font-ibm-mono bg-cyan-50 text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14 hover:bg-cyan-100" @onclick="RenderCast">
+	MATCH!
+</button>
+<Card />
+
+@code {
+	private readonly HttpClient client = new HttpClient();
+
+
+	private async void RenderCast()
+	{
+		// string url = 
+		// HttpResponseMessage response = await client.GetAsync();
+	}
+}
