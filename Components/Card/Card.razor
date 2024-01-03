@@ -37,7 +37,15 @@
                 {
                     if (tv != null)
                     {
-                        <TVDetail Tv="tv" OnClick="() => RenderImage(tv)"/>
+                        <div class="flex border-cyan-900 border-b cursor-pointer hover:bg-cyan-700" @onclick="() => RenderImage(tv)">
+                            <div>
+                                <img src='@tv.ImageUrl' class="w-10 m-2" />
+                            </div>
+                            <div class="text-gray-100 mt-3 w-80">
+                                <h3 class="font-bold text-[16px]">@tv.Name</h3>
+                                <p class="font-light text-[14px] mt-1">@tv.Year</p>
+                            </div>
+                        </div>
                     }
                 }
             </div>
@@ -55,7 +63,7 @@
         List<JObject> allResults = new List<JObject>();
         if (!Object.ReferenceEquals(e.Value, null))
         {
-            string url = $"https://api.themoviedb.org/3/search/movie?api_key={ClientTvSecret.Key}&query={e.Value.ToString()}";
+            string url = $"https://api.themoviedb.org/3/search/movie?api_key={ClientTvSecret.Secret}&query={e.Value.ToString()}";
             HttpResponseMessage response = await client.GetAsync(url);
 
             JObject json = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -83,7 +91,7 @@
     }
 
     private bool IsTVChosen = false;
-    private TV ChosenTV;
+    public TV ChosenTV;
 
     private void RenderImage(TV tv)
     {
