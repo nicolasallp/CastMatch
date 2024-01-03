@@ -4,6 +4,6 @@ namespace castmatch.Models
 {
     public class ClientTvSecret
     {
-        public static string Key { get; set; }
+        public static string Secret { get; set; }
     }
 }
