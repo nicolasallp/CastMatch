@@ -41,23 +41,26 @@
 		if (leftCard.ChosenTV != null && rightCard.ChosenTV != null)
 		{
 
-			JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
-			JObject json1 = await GetJson(leftCard);
-			JObject json2 = await GetJson(rightCard);
+			JObject castLeft = await GetJson(leftCard);
+			JObject castRight = await GetJson(rightCard);
 
-			if (json1["cast"] != null && json2["cast"] != null)
+			if (castLeft["cast"] != null && castRight["cast"] != null)
 			{
-				foreach (JObject person in json1["cast"])
+				foreach (JObject person in castLeft["cast"])
 				{
-					foreach (JObject person2 in json2["cast"])
+					foreach (JObject person2 in castRight["cast"])
 					{
-						//Console.WriteLine(person["id"] +"---"+ person2["id"]);
 						if ((string)person["id"] == (string)person2["id"])
 						{
 							MatchedCast.Add(new Person
 								{
 									Id = (int)person["id"],
-									Character = [(string)person["character"], (string)person2["character"]],
+									Character = [person["roles"] != null ? 
+									(string)person["roles"][0]["character"] : (string)person["character"],
+
+									person2["roles"] != null ?
+										(string)person2["roles"][0]["character"] : (string)person2["character"]],
+
 									ImageUrl = $"https://image.tmdb.org/t/p/original{(string)person["profile_path"]}",
 									Name = (string)person["name"]
 								});
@@ -69,11 +72,21 @@
 				StateHasChanged();
 			}
 		}
+		JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
+		MatchedCast.Clear();
 	}
 
 	private async Task<JObject> GetJson(Card card)
 	{
-		string url = $"https://api.themoviedb.org/3/movie/{card.ChosenTV.Id}/credits?api_key={ClientTvSecret.Secret}";
+		string url;
+		if (card.ChosenTV.IsMovie)
+		{
+			url = $"https://api.themoviedb.org/3/movie/{card.ChosenTV.Id}/credits?api_key={ClientTvSecret.Secret}";
+		}
+		else
+		{
+			url = $"https://api.themoviedb.org/3/tv/{card.ChosenTV.Id}/aggregate_credits?api_key={ClientTvSecret.Secret}";
+		}
 		HttpResponseMessage response = await client.GetAsync(url);
 		return JObject.Parse(await response.Content.ReadAsStringAsync());
 	}

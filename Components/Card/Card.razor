@@ -33,7 +33,7 @@
             </div>
             <input @oninput="ListTVs" type="text" id="default-search" class="block w-full p-3 ps-10 text-lg text-gray-900 rounded-lg bg-cyan-950 dark:bg-cyan-950 dark:placeholder-gray-400 dark:text-gray-200 outline-cyan-800 outline-0 border-0 hover:bg-[#0a3749]">
             <div class="bg-cyan-800 mt-2 rounded-lg absolute top-[100%] w-[100%] max-h-80 overflow-y-scroll shadow-zinc-800 shadow drop-shadow-xl">
-                @foreach (TV tv in TVList)
+                @foreach (TV tv in TVList.OrderByDescending(t => t.Popularity))
                 {
                     if (tv != null)
                     {
@@ -63,31 +63,41 @@
         List<JObject> allResults = new List<JObject>();
         if (!Object.ReferenceEquals(e.Value, null))
         {
-            string url = $"https://api.themoviedb.org/3/search/movie?api_key={ClientTvSecret.Secret}&query={e.Value.ToString()}";
-            HttpResponseMessage response = await client.GetAsync(url);
-
-            JObject json = JObject.Parse(await response.Content.ReadAsStringAsync());
-            JArray data = new JArray(json["results"]
-                .Where(result => result["vote_count"] != null)
-                .OrderByDescending(result => (int)result["vote_count"])
-                .ToList());
+            JObject movies = await GetJson(e, "movie");
+            JObject shows = await GetJson(e, "tv");
 
             TVList.Clear();
-            foreach (JObject movie in data)
+
+            InsertTvs(movies, "title", "release_date");
+            InsertTvs(shows, "name", "first_air_date");
+        }
+    }
+
+    private void InsertTvs(JObject jObject, string nameAtt, string yearAtt)
+    {
+        foreach (JObject media in jObject["results"])
+        {
+            if ((int)media["vote_count"] > 50)
             {
-                if ((int)movie["vote_count"] > 50)
-                {
-                    TVList.Add(new TV
-                        {
-                            Id = (int)movie["id"],
-                            Name = (string)movie["title"],
-                            Year = ((string)movie["release_date"]).Substring(0, 4),
-                            Popularity = (int)movie["vote_count"],
-                            ImageUrl = $"https://image.tmdb.org/t/p/original{(string)movie["poster_path"]}"
-                        });
-                }
+                TVList.Add(new TV
+                    {
+                        Id = (int)media["id"],
+                        Name = (string)media[nameAtt],
+                        Year = ((string)media[yearAtt]).Substring(0, 4),
+                        Popularity = (int)media["vote_count"],
+                        ImageUrl = $"https://image.tmdb.org/t/p/original{(string)media["poster_path"]}",
+                        IsMovie = (media["first_air_date"] == null)
+                    });
             }
         }
+    }
+
+    private async Task<JObject> GetJson(ChangeEventArgs e, string media)
+    {
+        string url = $"https://api.themoviedb.org/3/search/{media}?api_key={ClientTvSecret.Secret}&query={e.Value.ToString()}";
+        HttpResponseMessage response = await client.GetAsync(url);
+
+        return JObject.Parse(await response.Content.ReadAsStringAsync());
     }
 
     private bool IsTVChosen = false;
