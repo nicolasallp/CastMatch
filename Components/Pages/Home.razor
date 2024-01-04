@@ -2,30 +2,42 @@
 @rendermode InteractiveServer
 @inject IJSRuntime JSRuntime
 
+
 <PageTitle>CastMatch | Connect your favorite Movies/Show cast!</PageTitle>
 
 <div class="flex items-center justify-center flex-1 sm:flex-col sm:justify-normal mt-16">
-	<Card @ref="leftCard" />
-	<button class="font-ibm-mono bg-cyan-50 text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14 hover:bg-cyan-100 disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800" @onclick="ListCast">
+
+	<Card @ref="leftCard" OnChoose="CheckCards" IsLeftCard=true />
+	<button class="font-ibm-mono bg-cyan-50 text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14 hover:bg-cyan-100 disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800" disabled="@(!IsTVChosen)" @onclick="ListCast">
 		MATCH!
 	</button>
-	<Card @ref="rightCard" />
+	<Card @ref="rightCard" OnChoose="CheckCards" IsLeftCard=false />
 </div>
-<div class="flex justify-center items-center mt-10 flex-col" id="cast">
-	<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4">Matched cast: @Count</span>
-	@foreach (Person person in MatchedCast)
-	{
-		<div class="flex items-center bg-cyan-800 w-[800px] mb-5 rounded-[15px]">
-			<div>
-				<img src="@person.ImageUrl" class="w-40 h-44 border-4 border-cyan-50 rounded-[20px] object-cover m-5" />
-			</div>
-			<div class="w-[600px]">
-				<h3 class="font-ibm-mono text-gray-50 text-[32px] font-bold">@person.Name</h3>
-				<p class="font-ibm-mono text-gray-50 text-[18px]">@person.Character[0] | @person.Character[1]</p>
-			</div>
-		</div>
-	}
-</div>
+@if (Clicked)
+{
+	<div class="flex justify-center items-center mt-4 flex-col" id="cast">
+		@if (Matched)
+		{
+			<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matched cast: @Count</span>
+			@foreach (Person person in MatchedCast)
+			{
+				<div class="flex items-center bg-cyan-800 w-[800px] mb-5 rounded-[15px]">
+					<div>
+						<img src="@person.ImageUrl" class="w-40 h-44 border-4 border-cyan-50 rounded-[20px] object-cover m-5" />
+					</div>
+					<div class="w-[600px]">
+						<h3 class="font-ibm-mono text-gray-50 text-[32px] font-bold">@person.Name</h3>
+						<p class="font-ibm-mono text-gray-50 text-[18px]">@person.Character[0] | @person.Character[1]</p>
+					</div>
+				</div>
+			}
+		}
+@* 		else
+		{
+			<span class="font-ibm-mono text-[22px] font-bold text-red-600 mb-4 mr-2">Match not found :(</span>
+		} *@
+	</div>
+}
 
 
 @code {
@@ -34,13 +46,21 @@
 	private Card rightCard;
 	private List<Person> MatchedCast = new List<Person>();
 	private int Count = 0;
-	private bool IsMatched;
+	private bool IsTVChosen = false;
+	private bool Clicked = false;
+	private bool Matched = false;
+
+	private void CheckCards()
+	{
+		IsTVChosen = leftCard.ChosenTV != null && rightCard.ChosenTV != null;
+	}
 
 	private async void ListCast()
 	{
-		if (leftCard.ChosenTV != null && rightCard.ChosenTV != null)
+		Clicked = true;
+		//StateHasChanged();
+		if (IsTVChosen)
 		{
-
 			JObject castLeft = await GetJson(leftCard);
 			JObject castRight = await GetJson(rightCard);
 
@@ -52,6 +72,7 @@
 					{
 						if ((string)person["id"] == (string)person2["id"])
 						{
+							Matched = true;
 							MatchedCast.Add(new Person
 								{
 									Id = (int)person["id"],
@@ -68,12 +89,12 @@
 						}
 					}
 				}
-				IsMatched = true;
 				StateHasChanged();
 			}
+			await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
 		}
-		JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
 		MatchedCast.Clear();
+		Count = 0;
 	}
 
 	private async Task<JObject> GetJson(Card card)
