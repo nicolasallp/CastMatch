@@ -1,4 +1,6 @@
-﻿<style>
+﻿@inject IJSRuntime JSRuntime
+
+<style>
     ::-webkit-scrollbar {
         width: 8px;
     }
@@ -12,10 +14,23 @@
         border-radius: 10px;
     }
 </style>
-<div class="bg-[#114052] h-[600px] w-[400px] sm:w-auto @((IsTVChosen) ? "" : "sm:pl-10 sm:pr-10")  sm:max-w-[400px] @((IsTVChosen) ? "p-2" : "p-5") m-2 mb-7 rounded-[20px] flex justify-center items-center flex-col relative">
+
+
+@if (IsLeftCard)
+{
+    <div class="w-10">
+        @if (IsTVChosen)
+        {
+            <img src="./assets/change.png" @onclick="() => IsTVChosen = false" class="max-w-10 cursor-pointer hover:scale-[1.07] active:scale-100" />
+        }
+    </div>
+}
+
+<div class="bg-[#114052] h-[600px] w-[400px] sm:w-auto @((IsTVChosen) ? "" : "sm:pl-10 sm:pr-10")  sm:max-w-[400px] @((IsTVChosen) ? "p-2" : "p-5") m-3 mb-7 rounded-[20px] flex justify-center items-center flex-col relative">
     @if (IsTVChosen)
     {
-        <img src="@ChosenTV.ImageUrl" class="rounded-[20px] min-h-[100%] min-w-[100%]" />
+        <img src="@ChosenTV.ImageUrl" class="rounded-[20px] min-h-[100%] min-w-[100%] object-cover" />
+        TVList.Clear();
     }
     else
     {
@@ -31,7 +46,7 @@
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                 </svg>
             </div>
-            <input @oninput="ListTVs" type="text" id="default-search" class="block w-full p-3 ps-10 text-lg text-gray-900 rounded-lg bg-cyan-950 dark:bg-cyan-950 dark:placeholder-gray-400 dark:text-gray-200 outline-cyan-800 outline-0 border-0 hover:bg-[#0a3749]">
+            <input @oninput="ListTVs" type="text" @ref="inputEl" id="default-search" class="block w-full p-3 ps-10 text-lg text-gray-900 rounded-lg bg-cyan-950 dark:bg-cyan-950 dark:placeholder-gray-400 dark:text-gray-200 outline-cyan-800 outline-0 border-0 hover:bg-[#0a3749]">
             <div class="bg-cyan-800 mt-2 rounded-lg absolute top-[100%] w-[100%] max-h-80 overflow-y-scroll shadow-zinc-800 shadow drop-shadow-xl">
                 @foreach (TV tv in TVList.OrderByDescending(t => t.Popularity))
                 {
@@ -50,10 +65,24 @@
                 }
             </div>
         </div>
+        FocusInput();
     }
 </div>
 
+@if (!IsLeftCard)
+{
+    <div class="w-10">
+        @if (IsTVChosen)
+        {
+            <img src="./assets/change.png" @onclick="() => IsTVChosen = false" class="max-w-10 cursor-pointer hover:scale-[1.07] active:scale-100" />
+        }
+    </div>
+}
+
 @code {
+    [Parameter]
+    public bool IsLeftCard { get; set; }
+
     private List<TV> TVList = new List<TV>();
     private JObject sortedJson = new JObject();
     private readonly HttpClient client = new HttpClient();
@@ -100,12 +129,25 @@
         return JObject.Parse(await response.Content.ReadAsStringAsync());
     }
 
+
+    [Parameter]
+    public EventCallback<bool> OnChoose { get; set; }
+
     private bool IsTVChosen = false;
     public TV ChosenTV;
 
-    private void RenderImage(TV tv)
+    private async Task RenderImage(TV tv)
     {
         IsTVChosen = true;
         ChosenTV = tv;
+        await OnChoose.InvokeAsync(true);
     }
+
+    private ElementReference inputEl;
+
+    private async Task FocusInput()
+    {
+        await inputEl.FocusAsync();
+    }
+
 }
