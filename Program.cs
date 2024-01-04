@@ -12,18 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-
-//var kvUri = builder.Configuration["KVUrl"];
-
-//var credential = new ClientSecretCredential(
-//        builder.Configuration["TenantId"],
-//        builder.Configuration["ClientId"],
-//        builder.Configuration["ClientSecretId"]
-//    );
-
-//var client = new SecretClient(new Uri(kvUri), credential);
-//ClientTvSecret.Secret = client.GetSecret(builder.Configuration["KeyVaultName"]).Value.Value;
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
