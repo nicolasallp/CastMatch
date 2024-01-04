@@ -7,38 +7,45 @@
 <PageTitle>CastMatch | Connect your favorite Movies/Show cast!</PageTitle>
 
 <div class="flex items-center justify-center flex-1 sm:flex-col sm:justify-normal mt-16">
-
 	<Card @ref="leftCard" OnChoose="CheckCards" IsLeftCard=true />
-	<button class="font-ibm-mono bg-cyan-50 text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14 hover:bg-cyan-100 disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800" disabled="@(!IsTVChosen)" @onclick="ListCast">
-		MATCH!
+	<button class="font-ibm-mono @((Clicked) ? "bg-cyan-700 hover:bg-cyan-700"  : "bg-cyan-50 hover:bg-cyan-100") text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14  disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800 min-w-[104px] min-h-[74px]" disabled="@(!IsTVChosen)" @onclick="ListCast">
+		@if (Clicked)
+		{
+			<div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-cyan-50 motion-reduce:animate-[spin_1.5s_linear_infinite]"
+				 role="status">
+				<span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+			</div>
+		}
+		else
+		{
+			<p>MATCH!</p>
+		}
 	</button>
 	<Card @ref="rightCard" OnChoose="CheckCards" IsLeftCard=false />
 </div>
-@if (Clicked)
-{
-	<div class="flex justify-center items-center mt-4 flex-col" id="cast">
-		@if (Matched)
+
+<div class="flex justify-center items-center mt-4 flex-col" id="cast">
+	@if (Count > 0)
+	{
+		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matched cast: @Count</span>
+		@foreach (Person person in MatchedCast)
 		{
-			<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matched cast: @Count</span>
-			@foreach (Person person in MatchedCast)
-			{
-				<div class="flex items-center bg-cyan-800 w-[800px] mb-5 rounded-[15px]">
-					<div>
-						<img src="@person.ImageUrl" class="w-40 h-44 border-4 border-cyan-50 rounded-[20px] object-cover m-5" />
-					</div>
-					<div class="w-[600px]">
-						<h3 class="font-ibm-mono text-gray-50 text-[32px] font-bold">@person.Name</h3>
-						<p class="font-ibm-mono text-gray-50 text-[18px]">@person.Character[0] | @person.Character[1]</p>
-					</div>
+			<div class="flex items-center bg-cyan-800 max-w-[860px] w-[80%] mb-5 rounded-[10px]">
+				<div>
+					<img src="@person.ImageUrl" class="max-w-[140px] w-40 h-56 border-[3px] border-opacity-80 border-cyan-50 rounded-[10px] object-cover" />
 				</div>
-			}
+				<div class="w-[600px] ml-5">
+					<h3 class="font-ibm-mono text-gray-50 text-[32px] sm:text-[20px] font-bold">@person.Name</h3>
+					<p class="font-ibm-mono text-gray-50 text-[18px] sm:text-[12px]">@person.Character[0] | @person.Character[1]</p>
+				</div>
+			</div>
 		}
-@* 		else
-		{
-			<span class="font-ibm-mono text-[22px] font-bold text-red-600 mb-4 mr-2">Match not found :(</span>
-		} *@
-	</div>
-}
+	}
+	else if (NotFound)
+	{
+		<span class="font-ibm-mono text-[22px] font-bold text-red-600 mb-4 mr-2">No match found :(</span>
+	}
+</div>
 
 
 @code {
@@ -49,7 +56,7 @@
 	private int Count = 0;
 	private bool IsTVChosen = false;
 	private bool Clicked = false;
-	private bool Matched = false;
+	private bool NotFound = false;
 
 	private void CheckCards()
 	{
@@ -59,7 +66,6 @@
 	private async void ListCast()
 	{
 		Clicked = true;
-		//StateHasChanged();
 		if (IsTVChosen)
 		{
 			JObject castLeft = await GetJson(leftCard);
@@ -73,7 +79,6 @@
 					{
 						if ((string)person["id"] == (string)person2["id"])
 						{
-							Matched = true;
 							MatchedCast.Add(new Person
 								{
 									Id = (int)person["id"],
@@ -90,10 +95,16 @@
 						}
 					}
 				}
+				if (Count == 0)
+				{
+					NotFound = true;
+				}
 				StateHasChanged();
 			}
 			await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
 		}
+		Clicked = false;
+		StateHasChanged();
 		MatchedCast.Clear();
 		Count = 0;
 	}
