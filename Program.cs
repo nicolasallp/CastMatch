@@ -22,7 +22,7 @@ var credential = new ClientSecretCredential(
     );
 
 var client = new SecretClient(new Uri(kvUri), credential);
-ClientTvSecret.Secret = client.GetSecret(builder.Configuration["KeyVaultName"]).Value.Value;
+//ClientTvSecret.Secret = client.GetSecret(builder.Configuration["KeyVaultName"]).Value.Value;
 
 var app = builder.Build();
 

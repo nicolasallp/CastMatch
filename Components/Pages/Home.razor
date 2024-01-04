@@ -1,6 +1,7 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @inject IJSRuntime JSRuntime
+@inject IConfiguration config
 
 
 <PageTitle>CastMatch | Connect your favorite Movies/Show cast!</PageTitle>
@@ -102,11 +103,11 @@
 		string url;
 		if (card.ChosenTV.IsMovie)
 		{
-			url = $"https://api.themoviedb.org/3/movie/{card.ChosenTV.Id}/credits?api_key={ClientTvSecret.Secret}";
+			url = $"https://api.themoviedb.org/3/movie/{card.ChosenTV.Id}/credits?api_key={config["TVSecret"]}";
 		}
 		else
 		{
-			url = $"https://api.themoviedb.org/3/tv/{card.ChosenTV.Id}/aggregate_credits?api_key={ClientTvSecret.Secret}";
+			url = $"https://api.themoviedb.org/3/tv/{card.ChosenTV.Id}/aggregate_credits?api_key={config["TVSecret"]}";
 		}
 		HttpResponseMessage response = await client.GetAsync(url);
 		return JObject.Parse(await response.Content.ReadAsStringAsync());
