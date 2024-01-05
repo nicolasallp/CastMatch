@@ -9,18 +9,17 @@
 
 <fieldset class="flex justify-center mt-3">
 	<div class="inline-flex">
-		<input class="hidden" @onchange="() => IsMediaToCast = true" type="radio" id="tv" name="match" value="tv" checked />
+		<input class="hidden" @onchange="() => {leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = true;}" type="radio" id="tv" name="match" value="tv" checked />
 		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l" for="tv">TV → Cast</label>
 
-		<input class="hidden" type="radio" id="castRadio" name="match" value="cast" />
+		<input class="hidden" @onchange="() => {leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = false;}" type="radio" id="castRadio" name="match" value="cast" />
 		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r" for="castRadio">Cast → TV</label>
 	</div>
-	<p class="text-cyan-50">(soon...)</p>
 </fieldset>
 
 <div class="flex items-center justify-center flex-1 sm:flex-col sm:justify-normal mt-6">
-	<MediaCard @ref="leftCard" IsMedia="IsMediaToCast" OnChoose="CheckCards" IsLeftCard=true />
-	<button class="font-ibm-mono @((Clicked) ? "bg-cyan-700 hover:bg-cyan-700"  : "bg-cyan-50 hover:bg-cyan-100") text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14  disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800 min-w-[104px] min-h-[74px]" disabled="@(!IsMediasChosen)" @onclick="ListCast">
+	<MediaCard @ref="leftCard" IsMediaToCast="IsMediaToCast" OnChoose="CheckCards" IsLeftCard=true />
+	<button class="font-ibm-mono @((Clicked) ? "bg-cyan-700 hover:bg-cyan-700"  : "bg-cyan-50 hover:bg-cyan-100") text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14  disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800 min-w-[104px] min-h-[74px]" disabled="@(!IsFilled)" @onclick="ListCast">
 		@if (Clicked)
 		{
 			<div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-cyan-50 motion-reduce:animate-[spin_1.5s_linear_infinite]"
@@ -33,16 +32,20 @@
 			<p>MATCH!</p>
 		}
 	</button>
-	<MediaCard @ref="rightCard" IsMedia="IsMediaToCast" OnChoose="CheckCards" IsLeftCard=false />
+	<MediaCard @ref="rightCard" IsMediaToCast="IsMediaToCast" OnChoose="CheckCards" IsLeftCard=false />
 </div>
 
 <div class="flex justify-center items-center mt-4 flex-col" id="cast">
-	@if (Count > 0)
+	@if (Count > 0 && (leftCard.IsChosen && rightCard.IsChosen))
 	{
 		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matched cast: @Count</span>
-		@foreach (Person person in MatchedCast)
+		@foreach (Match match in MatchedList)
 		{
-			<CastCard Person="person"  ImagesUrl="[leftCard.ChosenTV.ImageUrl, rightCard.ChosenTV.ImageUrl]" />
+			if (match.Character[0] != "Self" && !String.IsNullOrEmpty(match.Character[0]) &&
+			match.Character[1] != "Self" && !String.IsNullOrEmpty(match.Character[1]))
+			{
+				<CastCard Match="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
+			}
 		}
 	}
 	else if (NotFound)
@@ -54,47 +57,51 @@
 
 @code {
 	private readonly HttpClient client = new HttpClient();
+
 	private MediaCard leftCard;
 	private MediaCard rightCard;
-	private List<Person> MatchedCast = new List<Person>();
+
+	private List<Match> MatchedList = new List<Match>();
+
 	private int Count = 0;
-	private bool IsMediasChosen;
+	public bool IsFilled;
 	private bool Clicked;
 	private bool NotFound;
+	private bool IsMediaToCast = true;
 
 	// Checks if the two cards were filled.
 	private void CheckCards()
 	{
-		IsMediasChosen = leftCard.ChosenTV != null && rightCard.ChosenTV != null;
+		IsFilled = leftCard.Chosen != null && rightCard.Chosen != null;
 	}
 
 	private async void ListCast()
 	{
 		Clicked = true;
-		if (IsMediasChosen)
+		if (IsFilled)
 		{
-			JObject castLeft = await GetJson(leftCard);
-			JObject castRight = await GetJson(rightCard);
+			JObject MatchLeft = await GetJson(leftCard);
+			JObject MatchRight = await GetJson(rightCard);
 
-			if (castLeft["cast"] != null && castRight["cast"] != null)
+			if (MatchLeft["cast"] != null && MatchRight["cast"] != null)
 			{
-				foreach (JObject person in castLeft["cast"])
+				foreach (JObject match in MatchLeft["cast"])
 				{
-					foreach (JObject person2 in castRight["cast"])
+					foreach (JObject match2 in MatchRight["cast"])
 					{
-						if ((string)person["id"] == (string)person2["id"])
+						if ((string)match["id"] == (string)match2["id"])
 						{
-							MatchedCast.Add(new Person
+							MatchedList.Add(new Match
 								{
-									Id = (int)person["id"],
-									Character = [person["roles"] != null ? 
-									(string)person["roles"][0]["character"] : (string)person["character"],
+									Id = (int)match["id"],
+									Character = [match["roles"] != null ? 
+									(string)match["roles"][0]["character"] : (string)match["character"],
 
-									person2["roles"] != null ?
-										(string)person2["roles"][0]["character"] : (string)person2["character"]],
+									match2["roles"] != null ?
+										(string)match2["roles"][0]["character"] : (string)match2["character"]],
 
-									ImageUrl = $"https://image.tmdb.org/t/p/original{(string)person["profile_path"]}",
-									Name = (string)person["name"]
+									ImageUrl = $"https://image.tmdb.org/t/p/original{(string)match[(IsMediaToCast) ? "profile_path" : "poster_path"]}",
+									Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"]
 								});
 							Count++;
 						}
@@ -110,24 +117,30 @@
 		}
 		Clicked = false;
 		StateHasChanged();
-		MatchedCast.Clear();
+		MatchedList.Clear();
 		Count = 0;
 	}
 
 	private async Task<JObject> GetJson(MediaCard card)
 	{
 		string url;
-		if (card.ChosenTV.IsMovie)
+		if (IsMediaToCast)
 		{
-			url = $"https://api.themoviedb.org/3/movie/{card.ChosenTV.Id}/credits?api_key={config["TVSecret"]}";
+			if (card.Chosen.IsMovie)
+			{
+				url = $"https://api.themoviedb.org/3/movie/{card.Chosen.Id}/credits?api_key={config["TVSecret"]}";
+			}
+			else
+			{
+				url = $"https://api.themoviedb.org/3/tv/{card.Chosen.Id}/aggregate_credits?api_key={config["TVSecret"]}";
+			}
 		}
 		else
 		{
-			url = $"https://api.themoviedb.org/3/tv/{card.ChosenTV.Id}/aggregate_credits?api_key={config["TVSecret"]}";
+			url = $"https://api.themoviedb.org/3/person/{card.Chosen.Id}/combined_credits?api_key={config["TVSecret"]}";
 		}
 		HttpResponseMessage response = await client.GetAsync(url);
 		return JObject.Parse(await response.Content.ReadAsStringAsync());
 	}
 
-	private bool IsMediaToCast = false;
 }

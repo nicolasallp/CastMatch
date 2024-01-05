@@ -25,27 +25,34 @@
 @if (IsLeftCard)
 {
     <div class="w-10">
-        @if (IsTVChosen)
+        @if (IsChosen)
         {
-            <img src="./assets/change.png" @onclick="() => IsTVChosen = false" class="max-w-10 cursor-pointer hover:scale-[1.07] active:scale-100" />
+            <img src="./assets/change.png" @onclick="() => IsChosen = false" class="max-w-10 cursor-pointer hover:scale-[1.07] active:scale-100" />
         }
     </div>
 }
 
-<div class="bg-[#114052] h-[600px] w-[400px] sm:w-auto @((IsTVChosen) ? "" : "sm:pl-10 sm:pr-10")  sm:max-w-[400px] @((IsTVChosen) ? "p-[4px]" : "p-5") m-2 mb-7 rounded-[15px] flex justify-center items-center flex-col relative">
-    @if (IsTVChosen)
+<div class="bg-[#114052] h-[600px] w-[400px] sm:w-auto @((IsChosen) ? "" : "sm:pl-10 sm:pr-10")  sm:max-w-[400px] @((IsChosen) ? "p-[4px]" : "p-5") m-2 mb-7 rounded-[15px] flex justify-center items-center flex-col relative">
+    @if (IsChosen)
     {
-        <img src="@ChosenTV.ImageUrl" class="rounded-[15px] min-h-[100%] min-w-[100%] object-cover" />
-        TVList.Clear();
+        <img src="@Chosen.ImageUrl" class="rounded-[15px] min-h-[100%] min-w-[100%] object-cover" />
+        MatchList.Clear();
     }
     else
     {
-        <svg width="124" height="124" viewBox="0 0 124 124" fill="none" xmlns="http://www.w3.org/2000/svg" class="absolute top-20">
-            <g opacity="0.2">
-                <path d="M104.625 50.375H49.4498L101.719 36.5752C102.214 36.4448 102.678 36.2177 103.084 35.9071C103.491 35.5965 103.832 35.2084 104.087 34.7653C104.343 34.3221 104.509 33.8328 104.574 33.3253C104.64 32.8179 104.605 32.3025 104.47 31.8089L100.518 17.2777C99.9735 15.3227 98.6813 13.6607 96.9206 12.6516C95.16 11.6426 93.0728 11.3677 91.1109 11.8866L17.3455 31.3584C16.3633 31.6134 15.4419 32.0617 14.6351 32.6772C13.8283 33.2927 13.1525 34.0629 12.647 34.9428C12.1388 35.8119 11.8104 36.7743 11.6815 37.7728C11.5525 38.7713 11.6255 39.7856 11.8963 40.7553L15.5 54.0369C15.5 54.1047 15.5 54.1773 15.5 54.25V96.875C15.5 98.9304 16.3165 100.902 17.7699 102.355C19.2233 103.808 21.1946 104.625 23.25 104.625H100.75C102.805 104.625 104.777 103.808 106.23 102.355C107.683 100.902 108.5 98.9304 108.5 96.875V54.25C108.5 53.2223 108.092 52.2367 107.365 51.51C106.638 50.7833 105.653 50.375 104.625 50.375ZM93.0775 19.375L95.9838 30.0652L85.0272 32.9714L71.4066 25.1052L93.0775 19.375ZM60.7745 27.9L74.3952 35.7662L56.5024 40.4889L42.8817 32.6323L60.7745 27.9ZM22.3152 49.5128L19.4089 38.8178L32.2449 35.4272L45.8655 43.3031L22.3152 49.5128ZM100.75 96.875H23.25V58.125H100.75V96.875Z" fill="white" />
-            </g>
-        </svg>
-        <label for="default-search" class="mb-1 ml-1 text-base text-gray-900 dark:text-gray-200 self-start font-ibm-mono">Search for a movie/tv show</label>
+        if (IsMediaToCast)
+        {
+            <svg width="124" height="124" viewBox="0 0 124 124" fill="none" xmlns="http://www.w3.org/2000/svg" class="absolute top-20">
+                <g opacity="0.2">
+                    <path d="M104.625 50.375H49.4498L101.719 36.5752C102.214 36.4448 102.678 36.2177 103.084 35.9071C103.491 35.5965 103.832 35.2084 104.087 34.7653C104.343 34.3221 104.509 33.8328 104.574 33.3253C104.64 32.8179 104.605 32.3025 104.47 31.8089L100.518 17.2777C99.9735 15.3227 98.6813 13.6607 96.9206 12.6516C95.16 11.6426 93.0728 11.3677 91.1109 11.8866L17.3455 31.3584C16.3633 31.6134 15.4419 32.0617 14.6351 32.6772C13.8283 33.2927 13.1525 34.0629 12.647 34.9428C12.1388 35.8119 11.8104 36.7743 11.6815 37.7728C11.5525 38.7713 11.6255 39.7856 11.8963 40.7553L15.5 54.0369C15.5 54.1047 15.5 54.1773 15.5 54.25V96.875C15.5 98.9304 16.3165 100.902 17.7699 102.355C19.2233 103.808 21.1946 104.625 23.25 104.625H100.75C102.805 104.625 104.777 103.808 106.23 102.355C107.683 100.902 108.5 98.9304 108.5 96.875V54.25C108.5 53.2223 108.092 52.2367 107.365 51.51C106.638 50.7833 105.653 50.375 104.625 50.375ZM93.0775 19.375L95.9838 30.0652L85.0272 32.9714L71.4066 25.1052L93.0775 19.375ZM60.7745 27.9L74.3952 35.7662L56.5024 40.4889L42.8817 32.6323L60.7745 27.9ZM22.3152 49.5128L19.4089 38.8178L32.2449 35.4272L45.8655 43.3031L22.3152 49.5128ZM100.75 96.875H23.25V58.125H100.75V96.875Z" fill="white" />
+                </g>
+            </svg>
+        }
+        else
+        {
+            <img src="./assets/person.png" class="w-32 h-32 absolute top-20" />
+        }
+        <label for="default-search" class="mb-1 ml-1 text-base text-gray-900 dark:text-gray-200 self-start font-ibm-mono">Search for a @((IsMediaToCast) ? "movie/tv show" : "person" )</label>
         <div class="relative w-[100%]">
             <div class="absolute inset-y-0 start-0 top-4 ps-3 pointer-events-none">
                 <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
@@ -54,17 +61,17 @@
             </div>
             <input @oninput="ListSearch" type="text" id="default-search" class="block w-full p-3 ps-10 text-lg text-gray-900 rounded-lg bg-cyan-950 dark:bg-cyan-950 dark:placeholder-gray-400 dark:text-gray-200 outline-cyan-800 outline-0 border-0 hover:bg-[#0a3749]">
             <div class="bg-cyan-800 mt-2 rounded-lg absolute top-[100%] w-[100%] max-h-80 overflow-y-scroll shadow-zinc-800 shadow drop-shadow-xl">
-                @foreach (TV tv in TVList.OrderByDescending(t => t.Popularity))
+                @foreach (Match match in MatchList.OrderByDescending(t => t.Popularity))
                 {
-                    if (tv != null)
+                    if (match != null)
                     {
-                        <div class="flex border-cyan-900 border-b cursor-pointer hover:bg-cyan-700" @onclick="() => RenderImage(tv)">
+                        <div class="flex border-cyan-900 border-b cursor-pointer hover:bg-cyan-700" @onclick="() => RenderImage(match)">
                             <div>
-                                <img src='@tv.ImageUrl' class="w-10 m-2" />
+                                <img src='@match.ImageUrl' class="w-10 m-2" />
                             </div>
                             <div class="text-gray-100 mt-3 w-80">
-                                <h3 class="font-bold text-[16px]">@tv.Name</h3>
-                                <p class="font-light text-[14px] mt-1">@tv.Year</p>
+                                <h3 class="font-bold text-[16px]">@match.Name</h3>
+                                <p class="font-light text-[14px] mt-1">@match.Year</p>
                             </div>
                         </div>
                     }
@@ -77,9 +84,9 @@
 @if (!IsLeftCard)
 {
     <div class="w-10">
-        @if (IsTVChosen)
+        @if (IsChosen)
         {
-            <img src="./assets/change.png" @onclick="() => IsTVChosen = false" class="max-w-10 cursor-pointer hover:scale-[1.07] active:scale-100" />
+            <img src="./assets/change.png" @onclick="() => IsChosen = false" class="max-w-10 cursor-pointer hover:scale-[1.07] active:scale-100" />
         }
     </div>
 }
@@ -89,33 +96,31 @@
     public bool IsLeftCard { get; set; }
 
     [Parameter]
-    public bool IsMedia { get; set; }
+    public bool IsMediaToCast { get; set; }
 
-    private List<TV> TVList = new List<TV>();
-    private List<Person> CastList = new List<Person>();
+    private List<Match> MatchList = new List<Match>();
 
     private readonly HttpClient client = new HttpClient();
 
     private async Task ListSearch(ChangeEventArgs e)
     {
-        List<JObject> allResults = new List<JObject>();
         if (!Object.ReferenceEquals(e.Value, null))
         {
             JObject movies = await GetJson(e, "movie");
             JObject shows = await GetJson(e, "tv");
+            JObject cast = await GetJson(e, "person");
 
-            TVList.Clear();
+            MatchList.Clear();
 
-            // if (IsMedia)
-            // {
+            if (IsMediaToCast)
+            {
                 InsertTvs(movies, "title", "release_date");
                 InsertTvs(shows, "name", "first_air_date");
-            //}
-            // else
-            // {
-            //     JObject cast = await GetJson(e, "person");
-            //     InsertCast(cast);
-            // }
+            }
+            else
+            {
+                InsertCast(cast);
+            }
         }
     }
 
@@ -123,9 +128,9 @@
     {
         foreach (JObject person in values["results"])
         {
-            if ((int)person["popularity"] > 1)
+            if ((int)person["popularity"] > 1 && (string)person["known_for_department"] == "Acting")
             {
-                CastList.Add(new Person
+                MatchList.Add(new Match
                     {
                         Id = (int)person["id"],
                         Name = (string)person["name"],
@@ -142,7 +147,7 @@
         {
             if ((int)media["vote_count"] > 50)
             {
-                TVList.Add(new TV
+                MatchList.Add(new Match
                     {
                         Id = (int)media["id"],
                         Name = (string)media[nameAtt],
@@ -157,23 +162,27 @@
 
     private async Task<JObject> GetJson(ChangeEventArgs e, string media)
     {
-        string url = $"https://api.themoviedb.org/3/search/{media}?api_key={config["TVSecret"]}&query={e.Value.ToString()}";
-        HttpResponseMessage response = await client.GetAsync(url);
-
-        return JObject.Parse(await response.Content.ReadAsStringAsync());
+        List<JObject> jObjList = new List<JObject>();
+        for (int i=1;i<=2;i++)
+        {
+            string url = $"https://api.themoviedb.org/3/search/{media}?api_key={config["TVSecret"]}&query={e.Value.ToString()}&page={i}";
+            HttpResponseMessage response = await client.GetAsync(url);
+            JObject json = JObject.Parse(await response.Content.ReadAsStringAsync());
+            jObjList.Add(json);
+        }
+        return jObjList.Aggregate(new JObject(), (current, jsonObj) => { current.Merge(jsonObj); return current; });
     }
-
 
     [Parameter]
     public EventCallback<bool> OnChoose { get; set; }
 
-    private bool IsTVChosen = false;
-    public TV ChosenTV;
+    public bool IsChosen = false;
+    public Match Chosen;
 
-    private async Task RenderImage(TV tv)
+    private async Task RenderImage(Match match)
     {
-        IsTVChosen = true;
-        ChosenTV = tv;
+        IsChosen = true;
+        Chosen = match;
         await OnChoose.InvokeAsync(true);
     }
 }
