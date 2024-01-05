@@ -14,6 +14,11 @@
         background-color: #8AAEBB;
         border-radius: 10px;
     }
+
+    input:checked + label {
+        background-color: #AFD7DA;
+        color: #0a3749;
+    }
 </style>
 
 
@@ -47,7 +52,7 @@
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                 </svg>
             </div>
-            <input @oninput="ListTVs" type="text" id="default-search" class="block w-full p-3 ps-10 text-lg text-gray-900 rounded-lg bg-cyan-950 dark:bg-cyan-950 dark:placeholder-gray-400 dark:text-gray-200 outline-cyan-800 outline-0 border-0 hover:bg-[#0a3749]">
+            <input @oninput="ListSearch" type="text" id="default-search" class="block w-full p-3 ps-10 text-lg text-gray-900 rounded-lg bg-cyan-950 dark:bg-cyan-950 dark:placeholder-gray-400 dark:text-gray-200 outline-cyan-800 outline-0 border-0 hover:bg-[#0a3749]">
             <div class="bg-cyan-800 mt-2 rounded-lg absolute top-[100%] w-[100%] max-h-80 overflow-y-scroll shadow-zinc-800 shadow drop-shadow-xl">
                 @foreach (TV tv in TVList.OrderByDescending(t => t.Popularity))
                 {
@@ -83,11 +88,15 @@
     [Parameter]
     public bool IsLeftCard { get; set; }
 
+    [Parameter]
+    public bool IsMedia { get; set; }
+
     private List<TV> TVList = new List<TV>();
-    private JObject sortedJson = new JObject();
+    private List<Person> CastList = new List<Person>();
+
     private readonly HttpClient client = new HttpClient();
 
-    private async Task ListTVs(ChangeEventArgs e)
+    private async Task ListSearch(ChangeEventArgs e)
     {
         List<JObject> allResults = new List<JObject>();
         if (!Object.ReferenceEquals(e.Value, null))
@@ -97,14 +106,39 @@
 
             TVList.Clear();
 
-            InsertTvs(movies, "title", "release_date");
-            InsertTvs(shows, "name", "first_air_date");
+            // if (IsMedia)
+            // {
+                InsertTvs(movies, "title", "release_date");
+                InsertTvs(shows, "name", "first_air_date");
+            //}
+            // else
+            // {
+            //     JObject cast = await GetJson(e, "person");
+            //     InsertCast(cast);
+            // }
         }
     }
 
-    private void InsertTvs(JObject jObject, string nameAtt, string yearAtt)
+    private void InsertCast(JObject values)
     {
-        foreach (JObject media in jObject["results"])
+        foreach (JObject person in values["results"])
+        {
+            if ((int)person["popularity"] > 1)
+            {
+                CastList.Add(new Person
+                    {
+                        Id = (int)person["id"],
+                        Name = (string)person["name"],
+                        Popularity = (int)person["popularity"],
+                        ImageUrl = $"https://image.tmdb.org/t/p/original{(string)person["profile_path"]}",
+                    });
+            }
+        }
+    }
+
+    private void InsertTvs(JObject values, string nameAtt, string yearAtt)
+    {
+        foreach (JObject media in values["results"])
         {
             if ((int)media["vote_count"] > 50)
             {

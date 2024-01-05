@@ -1,0 +1,27 @@
+﻿<div class="flex items-center bg-cyan-800 max-w-[860px] w-[80%] mb-5 rounded-[10px]">
+	<div>
+		<img src="@Person.ImageUrl" class="max-w-[140px] w-40 h-56 border-[3px] border-opacity-80 border-cyan-50 rounded-[10px] object-cover" />
+	</div>
+	<div class="w-[600px] ml-5">
+		<h3 class="font-ibm-mono text-gray-50 text-[32px] sm:text-[20px] font-bold">@Person.Name</h3>
+		<div class="mt-4">
+			<div class="flex items-center mb-2">
+				<img src="@ImagesUrl[0]" class="w-6 rounded object-cover" />
+				<p class="font-ibm-mono text-gray-50 text-[18px] sm:text-[12px] ml-2">@Person.Character[0]</p>
+			</div>
+			<hr class="bg-cyan-50 opacity-50 max-w-[300px]" />
+			<div class="flex items-center mt-2">
+				<img src="@ImagesUrl[1]" class="w-6 rounded object-cover" />
+				<p class="font-ibm-mono text-gray-50 text-[18px] sm:text-[12px] ml-2">@Person.Character[1]</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public Person Person { get; set; }
+
+	[Parameter]
+	public string[] ImagesUrl { get; set; }
+}

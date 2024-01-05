@@ -6,9 +6,21 @@
 
 <PageTitle>CastMatch | Connect your favorite Movies/Show cast!</PageTitle>
 
-<div class="flex items-center justify-center flex-1 sm:flex-col sm:justify-normal mt-16">
-	<Card @ref="leftCard" OnChoose="CheckCards" IsLeftCard=true />
-	<button class="font-ibm-mono @((Clicked) ? "bg-cyan-700 hover:bg-cyan-700"  : "bg-cyan-50 hover:bg-cyan-100") text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14  disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800 min-w-[104px] min-h-[74px]" disabled="@(!IsTVChosen)" @onclick="ListCast">
+
+<fieldset class="flex justify-center mt-3">
+	<div class="inline-flex">
+		<input class="hidden" @onchange="() => IsMediaToCast = true" type="radio" id="tv" name="match" value="tv" checked />
+		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l" for="tv">TV → Cast</label>
+
+		<input class="hidden" type="radio" id="castRadio" name="match" value="cast" />
+		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r" for="castRadio">Cast → TV</label>
+	</div>
+	<p class="text-cyan-50">(soon...)</p>
+</fieldset>
+
+<div class="flex items-center justify-center flex-1 sm:flex-col sm:justify-normal mt-6">
+	<MediaCard @ref="leftCard" IsMedia="IsMediaToCast" OnChoose="CheckCards" IsLeftCard=true />
+	<button class="font-ibm-mono @((Clicked) ? "bg-cyan-700 hover:bg-cyan-700"  : "bg-cyan-50 hover:bg-cyan-100") text-cyan-950 font-bold rounded-xl pb-6 pt-6 pr-4 pl-4 text-xl m-14  disabled:bg-cyan-800 disabled:text-cyan-700 disabled:hover:bg-cyan-800 min-w-[104px] min-h-[74px]" disabled="@(!IsMediasChosen)" @onclick="ListCast">
 		@if (Clicked)
 		{
 			<div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-cyan-50 motion-reduce:animate-[spin_1.5s_linear_infinite]"
@@ -21,7 +33,7 @@
 			<p>MATCH!</p>
 		}
 	</button>
-	<Card @ref="rightCard" OnChoose="CheckCards" IsLeftCard=false />
+	<MediaCard @ref="rightCard" IsMedia="IsMediaToCast" OnChoose="CheckCards" IsLeftCard=false />
 </div>
 
 <div class="flex justify-center items-center mt-4 flex-col" id="cast">
@@ -30,15 +42,7 @@
 		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matched cast: @Count</span>
 		@foreach (Person person in MatchedCast)
 		{
-			<div class="flex items-center bg-cyan-800 max-w-[860px] w-[80%] mb-5 rounded-[10px]">
-				<div>
-					<img src="@person.ImageUrl" class="max-w-[140px] w-40 h-56 border-[3px] border-opacity-80 border-cyan-50 rounded-[10px] object-cover" />
-				</div>
-				<div class="w-[600px] ml-5">
-					<h3 class="font-ibm-mono text-gray-50 text-[32px] sm:text-[20px] font-bold">@person.Name</h3>
-					<p class="font-ibm-mono text-gray-50 text-[18px] sm:text-[12px]">@person.Character[0] | @person.Character[1]</p>
-				</div>
-			</div>
+			<CastCard Person="person"  ImagesUrl="[leftCard.ChosenTV.ImageUrl, rightCard.ChosenTV.ImageUrl]" />
 		}
 	}
 	else if (NotFound)
@@ -50,23 +54,24 @@
 
 @code {
 	private readonly HttpClient client = new HttpClient();
-	private Card leftCard;
-	private Card rightCard;
+	private MediaCard leftCard;
+	private MediaCard rightCard;
 	private List<Person> MatchedCast = new List<Person>();
 	private int Count = 0;
-	private bool IsTVChosen = false;
-	private bool Clicked = false;
-	private bool NotFound = false;
+	private bool IsMediasChosen;
+	private bool Clicked;
+	private bool NotFound;
 
+	// Checks if the two cards were filled.
 	private void CheckCards()
 	{
-		IsTVChosen = leftCard.ChosenTV != null && rightCard.ChosenTV != null;
+		IsMediasChosen = leftCard.ChosenTV != null && rightCard.ChosenTV != null;
 	}
 
 	private async void ListCast()
 	{
 		Clicked = true;
-		if (IsTVChosen)
+		if (IsMediasChosen)
 		{
 			JObject castLeft = await GetJson(leftCard);
 			JObject castRight = await GetJson(rightCard);
@@ -109,7 +114,7 @@
 		Count = 0;
 	}
 
-	private async Task<JObject> GetJson(Card card)
+	private async Task<JObject> GetJson(MediaCard card)
 	{
 		string url;
 		if (card.ChosenTV.IsMovie)
@@ -123,4 +128,6 @@
 		HttpResponseMessage response = await client.GetAsync(url);
 		return JObject.Parse(await response.Content.ReadAsStringAsync());
 	}
+
+	private bool IsMediaToCast = false;
 }
