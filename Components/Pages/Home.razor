@@ -9,10 +9,10 @@
 
 <fieldset class="flex justify-center mt-3">
 	<div class="inline-flex">
-		<input class="hidden" @onchange="() => {leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = true;}" type="radio" id="tv" name="match" value="tv" checked />
+		<input class="hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = true;}' type="radio" id="tv" name="match" value="tv" checked />
 		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l" for="tv">TV → Cast</label>
 
-		<input class="hidden" @onchange="() => {leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = false;}" type="radio" id="castRadio" name="match" value="cast" />
+		<input class="hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = false;}' type="radio" id="castRadio" name="match" value="cast" />
 		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r" for="castRadio">Cast → TV</label>
 	</div>
 </fieldset>
@@ -36,16 +36,12 @@
 </div>
 
 <div class="flex justify-center items-center mt-4 flex-col" id="cast">
-	@if (Count > 0 && (leftCard.IsChosen && rightCard.IsChosen))
+	@if (MatchedList.Count > 0 && (leftCard.IsChosen && rightCard.IsChosen))
 	{
-		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matched cast: @Count</span>
-		@foreach (Match match in MatchedList)
+		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matches: @MatchedList.Count</span>
+		@foreach (MatchInfo match in MatchedList.OrderByDescending(m => m.Popularity))
 		{
-			if (match.Character[0] != "Self" && !String.IsNullOrEmpty(match.Character[0]) &&
-			match.Character[1] != "Self" && !String.IsNullOrEmpty(match.Character[1]))
-			{
-				<CastCard Match="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
-			}
+			<CastCard MatchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
 		}
 	}
 	else if (NotFound)
@@ -61,13 +57,14 @@
 	private MediaCard leftCard;
 	private MediaCard rightCard;
 
-	private List<Match> MatchedList = new List<Match>();
+	private List<MatchInfo> MatchedList = new List<MatchInfo>();
 
-	private int Count = 0;
 	public bool IsFilled;
 	private bool Clicked;
 	private bool NotFound;
 	private bool IsMediaToCast = true;
+
+	private ChangeEventArgs e = new ChangeEventArgs();
 
 	// Checks if the two cards were filled.
 	private void CheckCards()
@@ -91,26 +88,43 @@
 					{
 						if ((string)match["id"] == (string)match2["id"])
 						{
-							MatchedList.Add(new Match
+							string[] character =
+									[match["roles"] != null ?
+									RemoveParentheses((string)match["roles"][0]["character"]) :
+									RemoveParentheses((string)match["character"]),
+
+										match2["roles"] != null ?
+									RemoveParentheses((string)match2["roles"][0]["character"]) :
+									RemoveParentheses((string)match2["character"])];
+
+							string[] wordsToIgnore = (leftCard.Chosen.IsPerson) ? new string[] { leftCard.Chosen.Name.ToLower(), "self" } : new string[] { "@@@" };
+
+							if (!wordsToIgnore.Any(word => character[0].ToLower().Contains(word)) &&
+								!String.IsNullOrEmpty(character[0]) && 
+								!wordsToIgnore.Any(word => character[1].ToLower().Contains(word)) &&
+								!String.IsNullOrEmpty(character[1]))
+							{
+								if (match["vote_count"] == null || (int)match["vote_count"] > 50)
 								{
-									Id = (int)match["id"],
-									Character = [match["roles"] != null ? 
-									(string)match["roles"][0]["character"] : (string)match["character"],
-
-									match2["roles"] != null ?
-										(string)match2["roles"][0]["character"] : (string)match2["character"]],
-
-									ImageUrl = $"https://image.tmdb.org/t/p/original{(string)match[(IsMediaToCast) ? "profile_path" : "poster_path"]}",
-									Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"]
-								});
-							Count++;
+									MatchedList.Add(new MatchInfo
+										{
+											Id = (int)match["id"],
+											Character = character,
+											ImageUrl = $"https://image.tmdb.org/t/p/original{(string)match[(IsMediaToCast) ? "profile_path" : "poster_path"]}",
+											Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"],
+											Popularity = (IsMediaToCast) ? 0 : (int)match["vote_count"]
+										});
+								}
+							}
 						}
 					}
 				}
-				if (Count == 0)
+				if (MatchedList.Count == 0)
 				{
 					NotFound = true;
 				}
+				HashSet<string> nameH = new HashSet<string>();
+				MatchedList = MatchedList.Where(obj => nameH.Add(obj.Name)).ToList();
 				StateHasChanged();
 			}
 			await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
@@ -118,7 +132,6 @@
 		Clicked = false;
 		StateHasChanged();
 		MatchedList.Clear();
-		Count = 0;
 	}
 
 	private async Task<JObject> GetJson(MediaCard card)
@@ -143,4 +156,8 @@
 		return JObject.Parse(await response.Content.ReadAsStringAsync());
 	}
 
+	private string RemoveParentheses(string text)
+	{
+		return Regex.Replace(text, @"\([^()]*\)", "");
+	}
 }
