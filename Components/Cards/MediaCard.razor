@@ -19,6 +19,15 @@
         background-color: #AFD7DA;
         color: #0a3749;
     }
+
+    .MtC:checked + label img {
+        content: url(../../wwwroot/assets/media_to_cast.png);
+    }
+
+    .CtM:checked + label img {
+        content: url(../../wwwroot/assets/cast_to_media.png);
+    }
+
 </style>
 
 
@@ -42,11 +51,7 @@
     {
         if (IsMediaToCast)
         {
-            <svg width="124" height="124" viewBox="0 0 124 124" fill="none" xmlns="http://www.w3.org/2000/svg" class="absolute top-20">
-                <g opacity="0.2">
-                    <path d="M104.625 50.375H49.4498L101.719 36.5752C102.214 36.4448 102.678 36.2177 103.084 35.9071C103.491 35.5965 103.832 35.2084 104.087 34.7653C104.343 34.3221 104.509 33.8328 104.574 33.3253C104.64 32.8179 104.605 32.3025 104.47 31.8089L100.518 17.2777C99.9735 15.3227 98.6813 13.6607 96.9206 12.6516C95.16 11.6426 93.0728 11.3677 91.1109 11.8866L17.3455 31.3584C16.3633 31.6134 15.4419 32.0617 14.6351 32.6772C13.8283 33.2927 13.1525 34.0629 12.647 34.9428C12.1388 35.8119 11.8104 36.7743 11.6815 37.7728C11.5525 38.7713 11.6255 39.7856 11.8963 40.7553L15.5 54.0369C15.5 54.1047 15.5 54.1773 15.5 54.25V96.875C15.5 98.9304 16.3165 100.902 17.7699 102.355C19.2233 103.808 21.1946 104.625 23.25 104.625H100.75C102.805 104.625 104.777 103.808 106.23 102.355C107.683 100.902 108.5 98.9304 108.5 96.875V54.25C108.5 53.2223 108.092 52.2367 107.365 51.51C106.638 50.7833 105.653 50.375 104.625 50.375ZM93.0775 19.375L95.9838 30.0652L85.0272 32.9714L71.4066 25.1052L93.0775 19.375ZM60.7745 27.9L74.3952 35.7662L56.5024 40.4889L42.8817 32.6323L60.7745 27.9ZM22.3152 49.5128L19.4089 38.8178L32.2449 35.4272L45.8655 43.3031L22.3152 49.5128ZM100.75 96.875H23.25V58.125H100.75V96.875Z" fill="white" />
-                </g>
-            </svg>
+            <img src="./assets/media.png" class="w-32 h-32 absolute top-20" />
         }
         else
         {
@@ -65,11 +70,11 @@
                 {
                     if (match != null)
                     {
-                        <div class="flex border-cyan-900 border-b cursor-pointer hover:bg-cyan-700" @onclick="() => Choose(match)">
-                            <div>
-                                <img src='@match.ImageUrl' class="w-10 m-2" />
+                        <div class="flex items-center border-cyan-900 border-b cursor-pointer hover:bg-cyan-700" @onclick="() => Choose(match)">
+                            <div class="">
+                                <img src='@match.ImageUrl' class="w-10 m-2 mr-0" />
                             </div>
-                            <div class="text-gray-100 mt-3 w-80">
+                            <div class="text-gray-100 m-2 ml-3 w-80">
                                 <h3 class="font-bold text-[16px]">@match.Name</h3>
                                 <p class="font-light text-[14px] mt-1">@match.Year</p>
                             </div>
@@ -171,6 +176,7 @@
     private async Task<JObject> GetJson(ChangeEventArgs e, string media)
     {
         List<JObject> jObjList = new List<JObject>();
+        // Getting two pages of the json.
         for (int i=1;i<=2;i++)
         {
             string url = $"https://api.themoviedb.org/3/search/{media}?api_key={config["TVSecret"]}&query={e.Value.ToString()}&page={i}";
@@ -178,6 +184,7 @@
             JObject json = JObject.Parse(await response.Content.ReadAsStringAsync());
             jObjList.Add(json);
         }
+        // Merging the two pages into one JObject variable.
         return jObjList.Aggregate(new JObject(), (current, jsonObj) => { current.Merge(jsonObj); return current; });
     }
 

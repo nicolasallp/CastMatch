@@ -9,11 +9,11 @@
 
 <fieldset class="flex justify-center mt-3">
 	<div class="inline-flex">
-		<input class="hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = true;}' type="radio" id="tv" name="match" value="tv" checked />
-		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l" for="tv">TV → Cast</label>
+		<input class="MtC hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = true;}' type="radio" id="tv" name="match" value="tv" checked />
+		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l" for="tv"><img src="./assets/media_to_cast.png" class="w-16"/></label>
 
-		<input class="hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = false;}' type="radio" id="castRadio" name="match" value="cast" />
-		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r" for="castRadio">Cast → TV</label>
+		<input class="CtM hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = false;}' type="radio" id="castRadio" name="match" value="cast" />
+		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r" for="castRadio"><img src="./assets/cast_to_media_w.png" class="w-16" /></label>
 	</div>
 </fieldset>
 
@@ -41,7 +41,7 @@
 		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matches: @MatchedList.Count</span>
 		@foreach (MatchInfo match in MatchedList.OrderByDescending(m => m.Popularity))
 		{
-			<CastCard MatchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
+			<ResultCard MatchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
 		}
 	}
 	else if (NotFound)
@@ -80,53 +80,55 @@
 			JObject MatchLeft = await GetJson(leftCard);
 			JObject MatchRight = await GetJson(rightCard);
 
-			if (MatchLeft["cast"] != null && MatchRight["cast"] != null)
+			foreach (JObject match in MatchLeft["cast"])
 			{
-				foreach (JObject match in MatchLeft["cast"])
+				foreach (JObject match2 in MatchRight["cast"])
 				{
-					foreach (JObject match2 in MatchRight["cast"])
+					if ((string)match["id"] == (string)match2["id"])
 					{
-						if ((string)match["id"] == (string)match2["id"])
+						string[] character =
+								// In the movie credits JSON, it doesn't have the "roles" attribute to get the character, unlike the TV show JSON, so I check if they have or not.
+								[match["roles"] != null ?
+								RemoveParentheses((string)match["roles"][0]["character"]) :
+								RemoveParentheses((string)match["character"]),
+
+									match2["roles"] != null ?
+								RemoveParentheses((string)match2["roles"][0]["character"]) :
+								RemoveParentheses((string)match2["character"])];
+
+								// Filtering the shows where the "character" is himself (like talk shows, podcasts, etc...)
+						string[] wordsToIgnore = (leftCard.Chosen.IsPerson) ? new string[] { leftCard.Chosen.Name.ToLower(), "self" } : new string[] { "@@@" };
+
+						if (!wordsToIgnore.Any(word => character[0].ToLower().Contains(word)) &&
+							!String.IsNullOrEmpty(character[0]) && 
+							!wordsToIgnore.Any(word => character[1].ToLower().Contains(word)) &&
+							!String.IsNullOrEmpty(character[1]))
 						{
-							string[] character =
-									[match["roles"] != null ?
-									RemoveParentheses((string)match["roles"][0]["character"]) :
-									RemoveParentheses((string)match["character"]),
-
-										match2["roles"] != null ?
-									RemoveParentheses((string)match2["roles"][0]["character"]) :
-									RemoveParentheses((string)match2["character"])];
-
-							string[] wordsToIgnore = (leftCard.Chosen.IsPerson) ? new string[] { leftCard.Chosen.Name.ToLower(), "self" } : new string[] { "@@@" };
-
-							if (!wordsToIgnore.Any(word => character[0].ToLower().Contains(word)) &&
-								!String.IsNullOrEmpty(character[0]) && 
-								!wordsToIgnore.Any(word => character[1].ToLower().Contains(word)) &&
-								!String.IsNullOrEmpty(character[1]))
+							if (match["vote_count"] == null || (int)match["vote_count"] > 50)
 							{
-								if (match["vote_count"] == null || (int)match["vote_count"] > 50)
-								{
-									MatchedList.Add(new MatchInfo
-										{
-											Id = (int)match["id"],
-											Character = character,
-											ImageUrl = $"https://image.tmdb.org/t/p/original{(string)match[(IsMediaToCast) ? "profile_path" : "poster_path"]}",
-											Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"],
-											Popularity = (IsMediaToCast) ? 0 : (int)match["vote_count"]
-										});
-								}
+								MatchedList.Add(new MatchInfo
+									{
+										Id = (int)match["id"],
+										Character = character,
+										ImageUrl = $"https://image.tmdb.org/t/p/original{(string)match[(IsMediaToCast) ? "profile_path" : "poster_path"]}",
+										Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"],
+										Popularity = (IsMediaToCast) ? 0 : (int)match["vote_count"]
+									});
 							}
 						}
 					}
 				}
-				if (MatchedList.Count == 0)
-				{
-					NotFound = true;
-				}
-				HashSet<string> nameH = new HashSet<string>();
-				MatchedList = MatchedList.Where(obj => nameH.Add(obj.Name)).ToList();
-				StateHasChanged();
 			}
+			if (MatchedList.Count == 0)
+			{
+				NotFound = true;
+			}
+
+			// Filtering the repeated shows (api issue)
+			HashSet<string> Repeated = new HashSet<string>();
+			MatchedList = MatchedList.Where(obj => Repeated.Add(obj.Name)).ToList();
+
+			StateHasChanged();
 			await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('#cast').scrollIntoView({ behavior: 'smooth' });");
 		}
 		Clicked = false;
