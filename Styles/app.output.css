@@ -1,5 +1,5 @@
 /*
-! tailwindcss v3.4.0 | MIT License | https://tailwindcss.com
+! tailwindcss v3.4.1 | MIT License | https://tailwindcss.com
 */
 
 /*
@@ -677,6 +677,10 @@ video {
   height: 1px !important;
 }
 
+.h-32 {
+  height: 8rem;
+}
+
 .h-4 {
   height: 1rem;
 }
@@ -695,10 +699,6 @@ video {
 
 .h-\[600px\] {
   height: 600px;
-}
-
-.h-32 {
-  height: 8rem;
 }
 
 .max-h-80 {
@@ -723,6 +723,10 @@ video {
 
 .w-10 {
   width: 2.5rem;
+}
+
+.w-32 {
+  width: 8rem;
 }
 
 .w-4 {
@@ -763,10 +767,6 @@ video {
 
 .w-full {
   width: 100%;
-}
-
-.w-32 {
-  width: 8rem;
 }
 
 .min-w-\[100\%\] {
