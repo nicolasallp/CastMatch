@@ -153,7 +153,7 @@
     {
         foreach (JObject media in values["results"])
         {
-            if ((int)media["vote_count"] > 50)
+            if (media["vote_count"] != null && (int)media["vote_count"] > 50)
             {
                 MatchList.Add(new MatchInfo
                     {
