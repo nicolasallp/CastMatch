@@ -41,10 +41,10 @@
 		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matches: @MatchedList.Count</span>
 		@foreach (MatchInfo match in MatchedList.OrderByDescending(m => m.Popularity))
 		{
-			<ResultCard MatchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
+			<ResultCard matchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
 		}
 	}
-	else if (NotFound)
+	else if (NotFound && IsFilled)
 	{
 		<span class="font-ibm-mono text-[22px] font-bold text-red-600 mb-4 mr-2">No match found :(</span>
 	}
@@ -69,7 +69,7 @@
 	// Checks if the two cards were filled.
 	private void CheckCards()
 	{
-		IsFilled = leftCard.Chosen != null && rightCard.Chosen != null;
+		IsFilled = leftCard.IsChosen && rightCard.IsChosen;
 	}
 
 	private async void ListCast()
@@ -95,6 +95,7 @@
 									match2["roles"] != null ?
 								RemoveParentheses((string)match2["roles"][0]["character"]) :
 								RemoveParentheses((string)match2["character"])];
+						string imageAtt = (IsMediaToCast) ? "profile_path" : "poster_path";
 
 						// Filtering the shows where the "character" is himself (like talk shows, podcasts, etc...)
 						string[] wordsToIgnore = (leftCard.Chosen.IsPerson) ? new string[] { leftCard.Chosen.Name.ToLower(), "self" } : new string[] { "@@@" };
@@ -110,9 +111,10 @@
 									{
 										Id = (int)match["id"],
 										Character = character,
-										ImageUrl = $"https://image.tmdb.org/t/p/original{(string)match[(IsMediaToCast) ? "profile_path" : "poster_path"]}",
+										ImageUrl = (!String.IsNullOrEmpty((string)match[imageAtt])) ?
+												$"https://image.tmdb.org/t/p/original{(string)match[imageAtt]}" : (((int)match["gender"]) == 1 ? "./assets/profile_not_found_w.png" : "./assets/profile_not_found.png"),
 										Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"],
-										Popularity = (IsMediaToCast) ? 0 : (int)match["vote_count"]
+										Popularity = (IsMediaToCast) ? (int)match["popularity"] : (int)match["vote_count"]
 									});
 							}
 						}
@@ -175,6 +177,8 @@
 		rightCard.IsChosen = false;
 		IsMediaToCast = isMediaToCast;
 		NotFound = false;
+
+		CheckCards();
 	}
 
 	private string RemoveParentheses(string text)
