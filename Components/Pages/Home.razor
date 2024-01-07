@@ -9,11 +9,11 @@
 
 <fieldset class="flex justify-center mt-3">
 	<div class="inline-flex">
-		<input class="MtC hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = true;}' type="radio" id="tv" name="match" value="tv" checked />
-		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l" for="tv"><img src="./assets/media_to_cast.png" class="w-16"/></label>
+		<input class="hidden" @onchange='(e) => SwitchMatch(e, true)' value="media" type="radio" id="tv" name="match" checked />
+		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-l hover:bg-cyan-800" for="tv"><img src="@(Radio1Img+".png")" class="w-16" /></label>
 
-		<input class="CtM hidden" @onchange='() => {e.Value = null; leftCard.ListSearch(e); leftCard.IsChosen = false; rightCard.IsChosen = false; IsMediaToCast = false;}' type="radio" id="castRadio" name="match" value="cast" />
-		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r" for="castRadio"><img src="./assets/cast_to_media_w.png" class="w-16" /></label>
+		<input class="hidden" @onchange='(e) => SwitchMatch(e, false)' value="cast" type="radio" id="castRadio" name="match" />
+		<label class="bg-cyan-900 border border-cyan-50 border-opacity-50 text-cyan-50 font-semibold py-2 px-4 cursor-pointer rounded-r hover:bg-cyan-800" for="castRadio"><img src="@(Radio2Img+".png")" class="w-16" /></label>
 	</div>
 </fieldset>
 
@@ -96,7 +96,7 @@
 								RemoveParentheses((string)match2["roles"][0]["character"]) :
 								RemoveParentheses((string)match2["character"])];
 
-								// Filtering the shows where the "character" is himself (like talk shows, podcasts, etc...)
+						// Filtering the shows where the "character" is himself (like talk shows, podcasts, etc...)
 						string[] wordsToIgnore = (leftCard.Chosen.IsPerson) ? new string[] { leftCard.Chosen.Name.ToLower(), "self" } : new string[] { "@@@" };
 
 						if (!wordsToIgnore.Any(word => character[0].ToLower().Contains(word)) &&
@@ -156,6 +156,25 @@
 		}
 		HttpResponseMessage response = await client.GetAsync(url);
 		return JObject.Parse(await response.Content.ReadAsStringAsync());
+	}
+
+	private string? Radio1Img = "./assets/media_to_cast_checked";
+	private string? Radio2Img = "./assets/cast_to_media";
+
+	private void SwitchMatch(ChangeEventArgs e, bool isMediaToCast)
+	{
+		Radio1Img = Radio1Img.Replace("_checked", "");
+		Radio2Img = Radio2Img.Replace("_checked", "");
+
+		Radio1Img = (isMediaToCast) ? Radio1Img + "_checked" : Radio1Img; 
+		Radio2Img = (!isMediaToCast) ? Radio2Img + "_checked" : Radio2Img;
+
+		e.Value = null;
+		leftCard.ListSearch(e);
+		leftCard.IsChosen = false;
+		rightCard.IsChosen = false;
+		IsMediaToCast = isMediaToCast;
+		NotFound = false;
 	}
 
 	private string RemoveParentheses(string text)
