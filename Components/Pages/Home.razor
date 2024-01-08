@@ -41,7 +41,7 @@
 		<span class="font-ibm-mono text-[22px] font-bold text-cyan-50 mb-4 mr-2">Matches: @MatchedList.Count</span>
 		@foreach (MatchInfo match in MatchedList.OrderByDescending(m => m.Popularity))
 		{
-			<ResultCard matchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl, rightCard.Chosen.ImageUrl]" />
+			<ResultCard matchInfo="match" ImagesUrl="[leftCard.Chosen.ImageUrl[0], rightCard.Chosen.ImageUrl[0]]" />
 		}
 	}
 	else if (NotFound && IsFilled)
@@ -111,8 +111,8 @@
 									{
 										Id = (int)match["id"],
 										Character = character,
-										ImageUrl = (!String.IsNullOrEmpty((string)match[imageAtt])) ?
-												$"https://image.tmdb.org/t/p/original{(string)match[imageAtt]}" : (((int)match["gender"]) == 1 ? "./assets/profile_not_found_w.png" : "./assets/profile_not_found.png"),
+										ImageUrl = [(!String.IsNullOrEmpty((string)match[imageAtt])) ?
+												$"https://image.tmdb.org/t/p/w500{(string)match[imageAtt]}" : (((int)match["gender"]) == 1 ? "./assets/profile_not_found_w.png" : "./assets/profile_not_found.png")],
 										Name = (string)match[((string)match["media_type"] == null || (string)match["media_type"] == "tv") ? "name" : "title"],
 										Popularity = (IsMediaToCast) ? (int)match["popularity"] : (int)match["vote_count"]
 									});

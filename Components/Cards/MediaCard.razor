@@ -39,7 +39,7 @@
 <div class="bg-[#114052] h-[600px] w-[400px] sm:w-auto @((IsChosen) ? "" : "sm:pl-10 sm:pr-10")  sm:max-w-[400px] @((IsChosen) ? "p-[4px]" : "p-5") m-2 mb-7 rounded-[15px] flex justify-center items-center flex-col relative">
     @if (IsChosen)
     {
-        <img src="@Chosen.ImageUrl" class="rounded-[15px] min-h-[100%] min-w-[100%] object-cover" />
+        <img src="@Chosen.ImageUrl[1]" class="rounded-[15px] min-h-[100%] min-w-[100%] object-cover" />
         MatchList.Clear();
     }
     else
@@ -67,7 +67,7 @@
                     {
                         <div class="flex items-center border-cyan-900 border-b cursor-pointer hover:bg-cyan-700" @onclick="() => Choose(match)">
                             <div class="">
-                                <img src='@match.ImageUrl' class="w-10 m-2 mr-0" />
+                                <img src='@match.ImageUrl[0]' class="w-10 m-2 mr-0" />
                             </div>
                             <div class="text-gray-100 m-2 ml-3 w-80">
                                 <h3 class="font-bold text-[16px]">@match.Name</h3>
@@ -141,7 +141,10 @@
                         Id = (int)person["id"],
                         Name = (string)person["name"],
                         Popularity = (int)person["popularity"],
-                        ImageUrl = $"https://image.tmdb.org/t/p/original{(string)person["profile_path"]}",
+                        ImageUrl = [
+                            $"https://image.tmdb.org/t/p/w200{(string)person["profile_path"]}",
+                            $"https://image.tmdb.org/t/p/original{(string)person["profile_path"]}"
+                            ],
                         IsPerson = true
                     });
             }
@@ -161,7 +164,10 @@
                         Name = (string)media[nameAtt],
                         Year = ((string)media[yearAtt]).Substring(0, 4),
                         Popularity = (int)media["vote_count"],
-                        ImageUrl = $"https://image.tmdb.org/t/p/original{(string)media["poster_path"]}",
+                        ImageUrl = [
+                            $"https://image.tmdb.org/t/p/w200/{(string)media["poster_path"]}",
+                            $"https://image.tmdb.org/t/p/original/{(string)media["poster_path"]}"
+                        ],
                         IsMovie = (media["first_air_date"] == null),
                     });
             }
